@@ -14,6 +14,7 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
   cardLikeBtn.addEventListener("click", cardLike);
 
   cardElement.querySelector(".card__image").src = cardInfo.link;
+  cardElement.querySelector(".card__image").alt = cardInfo.name;
   cardElement.querySelector(".card__title").textContent = cardInfo.name;
   cardElement
     .querySelector(".card__image")
