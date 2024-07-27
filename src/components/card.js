@@ -1,6 +1,4 @@
-// Функции для работы с карточками проекта Mesto вынесите в файл card.js, из него должна экспортироваться функция createCard,
-// которую вы создали раньше (у вас она может называться по-другому). Функции, обрабатывающие события лайка и удаления карточки,
-// также должны находиться в этом файле и экспортироваться из него.
+import { userId } from "./api.js";
 
 export function createCard(cardInfo, cardDelete, cardLike, openImage) {
   const cardTemplate = document.querySelector("#card-template").content;
@@ -9,6 +7,7 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
     .cloneNode(true);
   const cardDeleteBtn = cardElement.querySelector(".card__delete-button");
   const cardLikeBtn = cardElement.querySelector(".card__like-button");
+  const cardLikeCount = cardElement.querySelector(".card__like-count");
 
   cardDeleteBtn.addEventListener("click", cardDelete);
   cardLikeBtn.addEventListener("click", cardLike);
@@ -21,6 +20,25 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
     .addEventListener("click", function () {
       openImage(cardInfo);
     });
+
+  const cardId = cardInfo["_id"];
+  cardElement.setAttribute("id", cardId);
+
+  if (cardInfo.owner["_id"] === userId) {
+    cardDeleteBtn.addEventListener("click", () => {
+      cardDelete(cardId);
+    });
+  } else {
+    cardDeleteBtn.remove();
+  }
+  if (cardInfo.likes.some((like) => like._id === userId)) {
+    cardLikeBtn.classList.add("card__like-button_is-active");
+  }
+
+  cardLikeCount.textContent = cardInfo["likes"] ? cardInfo["likes"].length : 0;
+  cardElement.querySelector(".card__image").addEventListener("click", () => {
+    openImage(cardInfo);
+  });
 
   return cardElement;
 }

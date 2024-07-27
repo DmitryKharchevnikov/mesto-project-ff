@@ -1,7 +1,16 @@
 import "../index.css";
-import { createCard, comeLikeCard, comeDeleteCard } from "./card.js";
-import { initialCards } from "./cards.js";
+import { createCard, comeLikeCard } from "./card.js";
 import { openModal, closeModal, closeModalByClick } from "./modal.js";
+import { enableValidation, clearValidation } from "./validation.js";
+import {
+  userId,
+  fetchUserData,
+  fetchCards,
+  updateUserData,
+  fetchAddСardToServer,
+  updateAvatar,
+  fetchDeleteCardFromServer,
+} from "./api.js";
 
 const cardList = document.querySelector(".places__list");
 const cardModal = document.querySelector(".popup_type_new-card");
@@ -20,12 +29,47 @@ const imgPopupImage = popupImage.querySelector(".popup__image");
 const popupCaption = popupImage.querySelector(".popup__caption");
 const inputName = cardForm.querySelector(".popup__input_type_card-name");
 const inputUrl = cardForm.querySelector(".popup__input_type_url");
+const allModals = document.querySelectorAll(".popup");
+const editProfileAvatarModal = document.querySelector(
+  ".popup_type_edit_avatar"
+);
+const editProfileAvatarForm =
+  editProfileAvatarModal.querySelector(".popup__form");
+const editProfileAvatarImage = document.querySelector(".profile__image");
+const profileAvatarinput = editProfileAvatarForm.querySelector(
+  ".popup__input_type_profile-url"
+);
+const deleteCardModal = document.querySelector(".popup_type_card-remove");
+const deleteCardForm = deleteCardModal.querySelector(".popup__form");
+const validationConfig = {
+  formSelector: ".popup__form",
+  inputSelector: ".popup__input",
+  submitButtonSelector: ".popup__button",
+  inactiveButtonClass: "popup__button_disabled",
+  inputErrorClass: "popup__input_type_error",
+  errorClass: "popup__error_visible",
+};
+
+deleteCardForm.addEventListener("submit", () => {
+  const id = deleteCardForm.getAttribute("id");
+  fetchDeleteCardFromServer(id)
+    .then(() => {
+      document.getElementById(id).remove();
+    })
+    .catch((err) => console.log(err))
+    .finally(() => closeModal(deleteCardModal));
+});
 
 popupOpenBtn.addEventListener("click", function () {
+  const formElement = cardModal.querySelector(validationConfig.formSelector);
+  clearValidation(formElement, validationConfig);
+  cardForm.reset();
   openModal(cardModal);
 });
 
 profileEditBtn.addEventListener("click", function () {
+  const formElement = profileModal.querySelector(validationConfig.formSelector);
+  clearValidation(formElement, validationConfig);
   openModal(profileModal);
   fillProfileInputs();
 });
@@ -36,31 +80,54 @@ modalCloseBtn.forEach(function (button) {
   });
 });
 
+editProfileAvatarForm.addEventListener("submit", updateProfileAvatarSubmit);
+
+profileForm.addEventListener("submit", profileFormSubmit);
+
 [cardModal, profileModal, popupImage].forEach((modal) => {
   modal.addEventListener("mousedown", function (event) {
     closeModalByClick(event, modal);
   });
 });
 
-profileForm.addEventListener("submit", profileFormSubmit);
-
-initialCards.forEach(function (cardInfo) {
-  const eachElement = createCard(
-    cardInfo,
-    comeDeleteCard,
-    comeLikeCard,
-    openImageModal
-  );
-  cardList.append(eachElement);
+profileTitle.addEventListener("click", () => {
+  openModal(deleteCardModal);
 });
 
 fillProfileInputs();
 
+enableValidation(validationConfig);
+
+modalCloseBtn.forEach((button) => {
+  button.addEventListener("click", () => {
+    closeModal(button.closest(".popup"));
+  });
+});
+
+allModals.forEach((modal) => {
+  modal.addEventListener("mousedown", (event) => {
+    closeModalByClick(event, modal);
+  });
+});
+
+function openCardRemovalConfirmationModal(id) {
+  openModal(deleteCardModal);
+  deleteCardForm.setAttribute("id", id);
+}
+
 function profileFormSubmit(evt) {
   evt.preventDefault();
-  profileTitle.textContent = nameInput.value;
-  descProfile.textContent = descInput.value;
-  closeModal(profileModal);
+  addPreloader(evt);
+  updateUserData(nameInput.value, descInput.value)
+    .then((res) => {
+      profileTitle.textContent = res.name;
+      descInput.textContent = res.about;
+    })
+    .catch((err) => console.log(err))
+    .finally(() => {
+      removePreloader(evt);
+      closeModal(profileModal);
+    });
 }
 
 function fillProfileInputs() {
@@ -75,37 +142,106 @@ function openImageModal(cardInfo) {
   openModal(popupImage);
 }
 
-cardForm.addEventListener("submit", function (evt) {
+function renderUserData(userInfo) {
+  profileTitle.textContent = userInfo.name;
+  descProfile.textContent = userInfo.about;
+  profileForm.elements["name-input"].value = userInfo.name;
+  profileForm.elements["description-input"].value = userInfo.about;
+  editProfileAvatarImage.style[
+    "background-image"
+  ] = `url('${userInfo.avatar}')`;
+}
+
+function addInitialCards(cards) {
+  cards.forEach((cardInfo) => {
+    const eachElement = createCard(
+      cardInfo,
+      openCardRemovalConfirmationModal,
+      comeLikeCard,
+      openImageModal,
+      userId
+    );
+    cardList.append(eachElement);
+  });
+}
+
+cardForm.addEventListener("submit", (evt) => {
   evt.preventDefault();
-  const cardInfo = {
+  const formElement = cardModal.querySelector(validationConfig.formSelector);
+  const cardData = {
     name: inputName.value,
     link: inputUrl.value,
+    owner: {
+      _id: userId,
+    },
   };
-  const eachElement = createCard(
-    cardInfo,
-    comeDeleteCard,
-    comeLikeCard,
-    openImageModal
-  );
-  cardForm.reset();
-  closeModal(cardModal);
-  cardList.prepend(eachElement);
+  addPreloader(evt);
+  fetchAddСardToServer(inputName.value, inputUrl.value)
+    .then((cardData) => {
+      const eachElement = createCard(
+        cardData,
+        openCardRemovalConfirmationModal,
+        comeLikeCard,
+        openImageModal,
+        userId
+      );
+      cardList.prepend(eachElement);
+    })
+    .catch((err) => console.log(err))
+    .finally(() => {
+      removePreloader(evt);
+      closeModal(cardModal);
+      clearValidation(formElement, validationConfig);
+      cardForm.reset();
+    });
 });
 
-// В файле index.js должны остаться:
-// объявления и инициализация глобальных констант и переменных с DOM-элементами страницы,
-// обработчики событий (при открытии и закрытии попапов; при отправке форм; обработчик, открывающий попап при клике по изображению карточки);
-// вызовы других функций, подключённых из созданных модулей, которым нужно будет передавать объявленные здесь переменные и обработчики.
+editProfileAvatarImage.addEventListener("click", () => {
+  const formElement = editProfileAvatarModal.querySelector(
+    validationConfig.formSelector
+  );
+  clearValidation(formElement, validationConfig);
+  editProfileAvatarForm.reset();
+  openModal(editProfileAvatarModal);
+});
 
-// Чтобы было чуточку понятнее: вызов функции создания карточки должен находиться в файле index.js, но само объявление функции — в card.js.
-//  Используйте директивы export/import.
+function updateProfileAvatarSubmit(evt) {
+  evt.preventDefault();
+  const formElement = editProfileAvatarModal.querySelector(
+    validationConfig.formSelector
+  );
+  const url = profileAvatarinput.value;
+  addPreloader(evt);
+  updateAvatar(url)
+    .then((res) => {
+      const profilePictureUrl = res.avatar;
+      editProfileAvatarImage.style[
+        "background-image"
+      ] = `url('${profilePictureUrl}')`;
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+    .finally(() => {
+      removePreloader(evt);
+      closeModal(editProfileAvatarModal);
+      clearValidation(formElement, validationConfig);
+      editProfileAvatarForm.reset();
+    });
+}
 
-// Код разделен на модули:
-// в файле card.js описаны функции для работы с карточками: функция создания карточки, функции-обработчики событий удаления и лайка карточки;
-// в файле cards.js описан массив карточек, отображаемых на странице;
-// в файле modal.js описаны функции для работы с модальными окнами: функция открытия модального окна, функция закрытия модального окна,
-// функция-обработчик события нажатия Esc и функция-обработчик события клика по оверлею;
-// в файле index.js описана инициализация приложения и основная логика страницы: поиск DOM-элементов на странице и навешивание на них
-//  обработчиков событий; обработчики отправки форм, функция-обработчик события открытия модального окна для редактирования профиля;
-//  функция открытия модального окна изображения карточки. Также в index.js находится код, который отвечает за отображение шести карточек
-//  при открытии страницы.
+function addPreloader(evt) {
+  evt.submitter.textContent = "Сохранение...";
+}
+
+function removePreloader(evt) {
+  evt.submitter.textContent = "Сохранить";
+}
+
+const promises = [fetchUserData(), fetchCards()];
+Promise.all(promises)
+  .then(([userInfo, cards]) => {
+    renderUserData(userInfo);
+    addInitialCards(cards);
+  })
+  .catch((err) => console.log(err));
