@@ -1,5 +1,3 @@
-import { userId } from "./api.js";
-
 export function createCard(cardInfo, cardDelete, cardLike, openImage) {
   const cardTemplate = document.querySelector("#card-template").content;
   const cardElement = cardTemplate
@@ -23,6 +21,11 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
 
   const cardId = cardInfo["_id"];
   cardElement.setAttribute("id", cardId);
+
+  let userId;
+
+  const setUserId = (id) => {
+  userId = id};
 
   if (cardInfo.owner["_id"] === userId) {
     cardDeleteBtn.addEventListener("click", () => {

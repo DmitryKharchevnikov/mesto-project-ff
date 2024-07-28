@@ -10,6 +10,7 @@ import {
   fetchAddСardToServer,
   updateAvatar,
   fetchDeleteCardFromServer,
+  setUserId
 } from "./api.js";
 
 const cardList = document.querySelector(".places__list");
@@ -19,7 +20,7 @@ const popupOpenBtn = document.querySelector(".profile__add-button");
 const profileModal = document.querySelector(".popup_type_edit");
 const profileForm = profileModal.querySelector(".popup__form");
 const profileEditBtn = document.querySelector(".profile__edit-button");
-const modalCloseBtn = document.querySelectorAll(".popup__close");
+const modalCloseBtns = document.querySelectorAll(".popup__close");
 const nameInput = document.querySelector(".popup__input_type_name");
 const descInput = document.querySelector(".popup__input_type_description");
 const profileTitle = document.querySelector(".profile__title");
@@ -55,9 +56,13 @@ deleteCardForm.addEventListener("submit", () => {
   fetchDeleteCardFromServer(id)
     .then(() => {
       document.getElementById(id).remove();
+      closeModal(deleteCardModal)
+    })
+    .then((res) => {
+      setUserId(res["_id"]);
+      return res;
     })
     .catch((err) => console.log(err))
-    .finally(() => closeModal(deleteCardModal));
 });
 
 popupOpenBtn.addEventListener("click", function () {
@@ -74,7 +79,7 @@ profileEditBtn.addEventListener("click", function () {
   fillProfileInputs();
 });
 
-modalCloseBtn.forEach(function (button) {
+modalCloseBtns.forEach(function (button) {
   button.addEventListener("click", function () {
     closeModal(button.closest(".popup"));
   });
@@ -98,7 +103,7 @@ fillProfileInputs();
 
 enableValidation(validationConfig);
 
-modalCloseBtn.forEach((button) => {
+modalCloseBtns.forEach((button) => {
   button.addEventListener("click", () => {
     closeModal(button.closest(".popup"));
   });
@@ -122,11 +127,15 @@ function profileFormSubmit(evt) {
     .then((res) => {
       profileTitle.textContent = res.name;
       descInput.textContent = res.about;
+      closeModal(profileModal);
+    })
+    .then((res) => {
+      setUserId(res["_id"]);
+      return res;
     })
     .catch((err) => console.log(err))
     .finally(() => {
       removePreloader(evt);
-      closeModal(profileModal);
     });
 }
 
@@ -157,7 +166,7 @@ function addInitialCards(cards) {
     const eachElement = createCard(
       cardInfo,
       openCardRemovalConfirmationModal,
-      comeLikeCard,
+      // comeLikeCard,
       openImageModal,
       userId
     );
@@ -172,7 +181,7 @@ cardForm.addEventListener("submit", (evt) => {
     name: inputName.value,
     link: inputUrl.value,
     owner: {
-      _id: userId,
+      _id: userId
     },
   };
   addPreloader(evt);
@@ -186,11 +195,15 @@ cardForm.addEventListener("submit", (evt) => {
         userId
       );
       cardList.prepend(eachElement);
+      closeModal(profileModal);
+    })
+    .then((res) => {
+      setUserId(res["_id"]);
+      return res;
     })
     .catch((err) => console.log(err))
     .finally(() => {
       removePreloader(evt);
-      closeModal(cardModal);
       clearValidation(formElement, validationConfig);
       cardForm.reset();
     });
@@ -218,13 +231,17 @@ function updateProfileAvatarSubmit(evt) {
       editProfileAvatarImage.style[
         "background-image"
       ] = `url('${profilePictureUrl}')`;
+      closeModal(editProfileAvatarModal);
+    })
+    .then((res) => {
+      setUserId(res["_id"]);
+      return res;
     })
     .catch((err) => {
       console.log(err);
     })
     .finally(() => {
       removePreloader(evt);
-      closeModal(editProfileAvatarModal);
       clearValidation(formElement, validationConfig);
       editProfileAvatarForm.reset();
     });
@@ -243,5 +260,9 @@ Promise.all(promises)
   .then(([userInfo, cards]) => {
     renderUserData(userInfo);
     addInitialCards(cards);
+  })
+  .then((res) => {
+    setUserId(res["_id"]);
+    return res;
   })
   .catch((err) => console.log(err));

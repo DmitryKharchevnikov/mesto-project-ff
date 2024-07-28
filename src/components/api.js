@@ -14,10 +14,10 @@ export const fetchUserData = () => {
     },
   })
     .then(handleResponse)
-    .then((res) => {
-      setUserId(res["_id"]);
-      return res;
-    });
+    // .then((res) => {
+    //   setUserId(res["_id"]);
+    //   return res;
+    // });
 };
 
 export const fetchCards = () => {
