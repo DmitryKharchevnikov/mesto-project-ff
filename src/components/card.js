@@ -7,7 +7,6 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
   const cardLikeBtn = cardElement.querySelector(".card__like-button");
   const cardLikeCount = cardElement.querySelector(".card__like-count");
 
-  cardDeleteBtn.addEventListener("click", cardDelete);
   cardLikeBtn.addEventListener("click", cardLike);
 
   cardElement.querySelector(".card__image").src = cardInfo.link;
@@ -19,15 +18,12 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
       openImage(cardInfo);
     });
 
-  const cardId = cardInfo["_id"];
+  const cardId = cardInfo["id"];
   cardElement.setAttribute("id", cardId);
 
   let userId;
 
-  const setUserId = (id) => {
-  userId = id};
-
-  if (cardInfo.owner["_id"] === userId) {
+  if (cardInfo.owner["id"] === userId) {
     cardDeleteBtn.addEventListener("click", () => {
       cardDelete(cardId);
     });
@@ -44,14 +40,4 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
   });
 
   return cardElement;
-}
-
-export function comeLikeCard(event) {
-  if (event.target.classList.contains("card__like-button")) {
-    event.target.classList.toggle("card__like-button_is-active");
-  }
-}
-
-export function comeDeleteCard(event) {
-  event.target.closest(".places__item").remove();
 }

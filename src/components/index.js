@@ -1,7 +1,3 @@
-import "../index.css";
-import { createCard, comeLikeCard } from "./card.js";
-import { openModal, closeModal, closeModalByClick } from "./modal.js";
-import { enableValidation, clearValidation } from "./validation.js";
 import {
   userId,
   fetchUserData,
@@ -10,8 +6,14 @@ import {
   fetchAddСardToServer,
   updateAvatar,
   fetchDeleteCardFromServer,
-  setUserId
+  setUserId,
+  removeLike,
+  addLike
 } from "./api.js";
+import "../index.css";
+import { openModal, closeModal, closeModalByClick } from "./modal.js";
+import { enableValidation, clearValidation } from "./validation.js";
+import { createCard} from "./card.js";
 
 const cardList = document.querySelector(".places__list");
 const cardModal = document.querySelector(".popup_type_new-card");
@@ -56,13 +58,9 @@ deleteCardForm.addEventListener("submit", () => {
   fetchDeleteCardFromServer(id)
     .then(() => {
       document.getElementById(id).remove();
-      closeModal(deleteCardModal)
+      closeModal(deleteCardModal);
     })
-    .then((res) => {
-      setUserId(res["_id"]);
-      return res;
-    })
-    .catch((err) => console.log(err))
+    .finally(() => closeModal(deleteCardModal))
 });
 
 popupOpenBtn.addEventListener("click", function () {
@@ -130,7 +128,7 @@ function profileFormSubmit(evt) {
       closeModal(profileModal);
     })
     .then((res) => {
-      setUserId(res["_id"]);
+      setUserId(res);
       return res;
     })
     .catch((err) => console.log(err))
@@ -161,12 +159,30 @@ function renderUserData(userInfo) {
   ] = `url('${userInfo.avatar}')`;
 }
 
+function comeLikeCard(event) {
+  if (event.target.classList.contains("card__like-button")) {
+    const isActive = event.target.classList.contains(
+      "card__like-button_is-active"
+    );
+    const cardElement = event.target.closest(".places__item");
+    const id = cardElement.id;
+    const cardLikeCount = cardElement.querySelector(".card__like-count");
+    const likeMethod = isActive ? removeLike : addLike;
+    likeMethod(id)
+      .then((res) => {
+        event.target.classList.toggle("card__like-button_is-active");
+        cardLikeCount.textContent = res.likes.length;
+      })
+      .catch((err) => console.log(err));
+  }
+}
+
 function addInitialCards(cards) {
   cards.forEach((cardInfo) => {
     const eachElement = createCard(
       cardInfo,
       openCardRemovalConfirmationModal,
-      // comeLikeCard,
+      comeLikeCard,
       openImageModal,
       userId
     );
@@ -181,7 +197,7 @@ cardForm.addEventListener("submit", (evt) => {
     name: inputName.value,
     link: inputUrl.value,
     owner: {
-      _id: userId
+      _id: userId,
     },
   };
   addPreloader(evt);
@@ -198,7 +214,7 @@ cardForm.addEventListener("submit", (evt) => {
       closeModal(profileModal);
     })
     .then((res) => {
-      setUserId(res["_id"]);
+      setUserId(res);
       return res;
     })
     .catch((err) => console.log(err))
@@ -234,7 +250,7 @@ function updateProfileAvatarSubmit(evt) {
       closeModal(editProfileAvatarModal);
     })
     .then((res) => {
-      setUserId(res["_id"]);
+      setUserId(res);
       return res;
     })
     .catch((err) => {
@@ -262,7 +278,7 @@ Promise.all(promises)
     addInitialCards(cards);
   })
   .then((res) => {
-    setUserId(res["_id"]);
+    setUserId(res);
     return res;
   })
   .catch((err) => console.log(err));
