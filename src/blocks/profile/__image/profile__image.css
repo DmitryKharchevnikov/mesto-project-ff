@@ -24,7 +24,7 @@
 }
 
 .profile__image:before {
-  background: url(/Users/dmitry/projects/5sprint/mesto-project-ff/src/images/edit-icon.svg);
+  background: url(/src/images/edit-icon.svg);
   background-position: 50%;
   background-repeat: no-repeat;
   content: "";
