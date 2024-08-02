@@ -85,7 +85,7 @@ modalCloseBtns.forEach(function (button) {
 
 editProfileAvatarForm.addEventListener("submit", updateProfileAvatarSubmit);
 
-profileForm.addEventListener("submit", profileFormSubmit);
+profileForm.addEventListener("submit", handleProfileFormSubmit);
 
 [cardModal, profileModal, popupImage].forEach((modal) => {
   modal.addEventListener("mousedown", function (event) {
@@ -118,7 +118,7 @@ function openCardRemovalConfirmationModal(id) {
   deleteCardForm.setAttribute("id", id);
 }
 
-function profileFormSubmit(evt) {
+function handleProfileFormSubmit(evt) {
   evt.preventDefault();
   addPreloader(evt);
   updateUserData(nameInput.value, descInput.value)
@@ -211,7 +211,7 @@ cardForm.addEventListener("submit", (evt) => {
         userId
       );
       cardList.prepend(eachElement);
-      closeModal(profileModal);
+      closeModal(cardModal);
     })
     .then((res) => {
       setUserId(res);

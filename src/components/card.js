@@ -18,12 +18,12 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
       openImage(cardInfo);
     });
 
-  const cardId = cardInfo["id"];
+  const cardId = cardInfo["_id"];
   cardElement.setAttribute("id", cardId);
 
   let userId;
 
-  if (cardInfo.owner["id"] === userId) {
+  if (cardInfo.owner["_id"] === userId) {
     cardDeleteBtn.addEventListener("click", () => {
       cardDelete(cardId);
     });
