@@ -1,4 +1,4 @@
-export function createCard(cardInfo, cardDelete, cardLike, openImage) {
+export function createCard(cardInfo, cardDelete, cardLike, openImage, userId) {
   const cardTemplate = document.querySelector("#card-template").content;
   const cardElement = cardTemplate
     .querySelector(".places__item")
@@ -9,8 +9,6 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
 
   cardLikeBtn.addEventListener("click", cardLike);
 
-  cardElement.querySelector(".card__image").src = cardInfo.link;
-  cardElement.querySelector(".card__image").alt = cardInfo.name;
   cardElement.querySelector(".card__title").textContent = cardInfo.name;
   cardElement
     .querySelector(".card__image")
@@ -20,10 +18,10 @@ export function createCard(cardInfo, cardDelete, cardLike, openImage) {
 
   const cardId = cardInfo["_id"];
   cardElement.setAttribute("id", cardId);
+  cardElement.querySelector(".card__image").src = cardInfo.link;
+  cardElement.querySelector(".card__image").alt = cardInfo.name;
 
-  let userId;
-
-  if (cardInfo.owner["_id"] === userId) {
+    if (cardInfo.owner["_id"] === userId) {
     cardDeleteBtn.addEventListener("click", () => {
       cardDelete(cardId);
     });
