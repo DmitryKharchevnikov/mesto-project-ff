@@ -112,7 +112,7 @@ function handleProfileFormSubmit(evt) {
   updateUserData(nameInput.value, descInput.value)
     .then((res) => {
       profileTitle.textContent = res.name;
-      descInput.textContent = res.about;
+      descProfile.textContent = res.about;
       closeModal(profileModal);
     })
     .catch((err) => console.log(err))
